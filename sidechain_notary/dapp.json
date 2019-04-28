@@ -1,0 +1,17 @@
+{
+  "name": "notary",
+  "link": "http://notary.zip",
+  "category": 4,
+  "description": "",
+  "tags": "",
+  "icon": "http://notary.png",
+  "delegates": [
+    "c8fb398664699181e3375861069d49e2178f491576835c213fec3275408de890",
+    "e2545aaa6ab811cfddccb7664bf47487b3f54a00f09c653273f31a707ea478be",
+    "fe6a2a2cac44a2cd92caba75ecf5466c0b987463b4b4529732a99afea3053081",
+    "298d039a70793edd6867239d77d38e2512cfeb644b7d0c6556607bdd01d24741",
+    "e90af1f90ce143e0c6b9f65e6eaad0cdd2b34a60a7f677c04db30085e3899cec"
+  ],
+  "unlockDelegates": 3,
+  "type": 0
+}

@@ -1,0 +1,41 @@
+LOCALNET:
+=========
+Docker Container: asch-localnet-ubuntu1604-test (https://hub.docker.com/r/andreasroos/asch-localnet-ubuntu1604)
+
+root@a75bd2b1bcde:/home/sidechain# asch-cli crypto --generate
+? Enter number of accounts to generate 6
+[ { address: 'A7pjuXuq81N4UhVU8oMFNipNsKriukWyMz',
+    secret: 'sponsor wall again lonely parade young patrol baby expire bean fall round',
+    publicKey: '6f1b642901568987f61b8d09b53ab243b93645fb69e38c8f7805bbc1a3ed281c' },
+
+
+
+
+  { address: 'AMxMoyyATgYqfBf1oAAvfAophxBvZtnuse',
+    secret: 'ability wash include photo attend field tilt stomach notice rely few author',
+    publicKey: 'c8fb398664699181e3375861069d49e2178f491576835c213fec3275408de890' },
+  { address: 'AH6cKDT4QyTD6KWEhFkWpYAunNjmHHBZjN',
+    secret: 'cook impact elite fiber trick share shaft stem lamp clip seek also',
+    publicKey: 'e2545aaa6ab811cfddccb7664bf47487b3f54a00f09c653273f31a707ea478be' },
+  { address: 'A2yfr55PEC51BJKhDD92ZMzFM5vmWGp9yD',
+    secret: 'mimic shop among brown issue version hospital holiday lift sing sorry impulse',
+    publicKey: 'fe6a2a2cac44a2cd92caba75ecf5466c0b987463b4b4529732a99afea3053081' },
+  { address: 'AFVraZyVXqES4KVg5vsBkuKj8rUphuWzx',
+    secret: 'gauge blind genuine cram eagle accident diary forest net crop fork state',
+    publicKey: '298d039a70793edd6867239d77d38e2512cfeb644b7d0c6556607bdd01d24741' },
+  { address: 'ACq7hZ4gFVLdGs7ZupsKXVDLcKaKv8jQMH',
+    secret: 'violin copy draft crumble frozen museum gain garlic clap misery engine manage',
+    publicKey: 'e90af1f90ce143e0c6b9f65e6eaad0cdd2b34a60a7f677c04db30085e3899cec' } ]
+
+
+seed from delegates:
+ability wash include photo attend field tilt stomach notice rely few author
+cook impact elite fiber trick share shaft stem lamp clip seek also
+mimic shop among brown issue version hospital holiday lift sing sorry impulse
+gauge blind genuine cram eagle accident diary forest net crop fork state
+violin copy draft crumble frozen museum gain garlic clap misery engine manage
+
+public-key from delegates:
+c8fb398664699181e3375861069d49e2178f491576835c213fec3275408de890,e2545aaa6ab811cfddccb7664bf47487b3f54a00f09c653273f31a707ea478be,fe6a2a2cac44a2cd92caba75ecf5466c0b987463b4b4529732a99afea3053081,298d039a70793edd6867239d77d38e2512cfeb644b7d0c6556607bdd01d24741,e90af1f90ce143e0c6b9f65e6eaad0cdd2b34a60a7f677c04db30085e3899cec
+
+=========
