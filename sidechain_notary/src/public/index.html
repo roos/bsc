@@ -12,37 +12,40 @@
 
     $(document).ready(function() {
 
+      /*
+      Vorlage > QUELLE: https://github.com/bassjobsen/hello-blockchain-dapp/blob/master/public/index.html
+      */
+
       var DAPP_ID = "/chains/test-nDtTqaHrptvq/";
       var URL = "http://localhost:4096/api" + DAPP_ID;
       var block_height = 0;
       var transaction_count = 0;
+      var State = {
+          isLogin: false
+      };
+      var UserInfo = {
+          secret: '',
+          publicKey: '',
+          address: '',
+          balance: '',
+          currency: '',
+          isDelegate: false
+      };
+      $('#forms').hide();
+      $('#logs').hide();
 
-      $('#btnAddFile').click(function () {
-        var addFile = $('#addFile').val();
-        var addFile = $('#searchUser').val();
-        var addComment = $('#addComment').val();
-        $.ajax({
-            type: 'POST',
-            url: URL + "file",
-            data: {
-              file: addFile,
-              comment: addComment
-            },
-            dataType: 'json',
-            success: function (ret) {
-                document.getElementById("output").value = "add File: " + ret;
-            }
-        })
-      })
-
+      /*
+      Search User
+      */
       $('#btnSearchUser').click(function () {
         var args = $('#searchUser').val();
         $.ajax({
             type: 'GET',
-            url: URL + "/accounts/" + args,
+            //url: URL + "/accounts/" + args,
+            url: URL + "/user/" + args,
             dataType: 'json',
             success: function (ret) {
-                document.getElementById("output").value = "search User: " + JSON.stringify(ret);
+                document.getElementById("output").value = "search User: " + JSON.stringify(ret) + "\n";
             }
         })
 
@@ -52,6 +55,9 @@
         //document.getElementById("output").value = "search User: " + args;
       });
 
+      /*
+      Search File
+      */
       $('#btnSearchFile').click(function () {
         var args = $('#searchFile').val();
 
@@ -60,7 +66,7 @@
             url: URL + "/file/" + args,
             dataType: 'json',
             success: function (ret) {
-                document.getElementById("output").value = "search File: " + JSON.stringify(ret);
+                document.getElementById("output").value = "search File: " + JSON.stringify(ret) + "\n";
             }
         })
 
@@ -68,6 +74,9 @@
         //document.getElementById("output").value = "search File: " + args;
       });
 
+      /*
+      Get Sidechain Block-Height
+      */
       function getSidechainBlockHeight() {
           $.ajax({
               type: 'GET',
@@ -82,6 +91,9 @@
           })
       }
 
+      /*
+      Get Sidechain Transaction Count
+      */
       function getSidechainTransactionCount() {
           $.ajax({
               type: 'GET',
@@ -96,6 +108,9 @@
           })
       }
 
+      /*
+      Get time from last update
+      */
       function setLastUpdate() {
         a = new Date();
         b = a.getHours();
@@ -106,7 +121,9 @@
         lastUpdate.innerHTML = "Last Update: " + zeit;
       }
 
-
+      /*
+      Get last five blocks (from sidechain)
+      */
       function getSidechainLastFiveBlocks() {
           var blocksLastFive = document.getElementById("notary-last-five-blocks");
 
@@ -121,14 +138,23 @@
 
                   for(var i = ret.blocks.length-1; i>=0; i--) {
                     var node = document.createElement("LI");
-                    var textnode = document.createTextNode("height: " + ret.blocks[i].height);
-                    node.appendChild(textnode);
+                    var id = document.createTextNode("ID: " + ret.blocks[i].id);
+                    var hoehe = document.createTextNode("height: " + ret.blocks[i].height);
+                    var timestamp = document.createTextNode("Timestamp: " + ret.blocks[i].timestamp);
+                    var delegate = document.createTextNode("Delegate: " + ret.blocks[i].delegate);
+                    node.appendChild(id);
+                    node.appendChild(hoehe);
+                    node.appendChild(timestamp);
+                    node.appendChild(delegate);
                     document.getElementById("notary-last-five-blocks").appendChild(node);
                   }
               }
           })
       }
 
+      /*
+      Get last five transactions (from sidechain)
+      */
       function getSidechainLastFiveTransactions() {
           var blocksLastFive = document.getElementById("notary-last-five-transactions");
 
@@ -151,7 +177,136 @@
           })
       }
 
-document.getElementById("urlTitle").innerHTML = URL;
+      /*
+      Add file to DB with transaction.
+      */
+      $('#btnAddFile').click(function () {
+            var filehash = $('#addFile').val();
+            var comment = $('#addComment').val();
+            var fee = '10000000'
+            var data = {
+                secret: UserInfo.secret,
+                fee: fee,
+                type: 1000,
+                args: JSON.stringify([filehash, comment])
+            }
+            console.log('invoke: ', data)
+            $.ajax({
+                type: 'PUT',
+                url: URL + '/transactions/unsigned',
+                data: data,
+                dataType: 'json',
+                success: function(ret) {
+                    console.log('addFile success area: ' + ret);
+                    if (!ret.success) {
+                        alert('Error: ' + ret.error);
+                        document.getElementById("output").value = "file could not be added: " + ret.error + "\n";
+                        return;
+                    }
+                    alert("Success! ret: " + ret + "\n" +
+                        "transID: " + ret.transactionId + "\n" +
+                        "id: " + ret.id + "\n" +
+                        "file: " + ret.file + "\n" +
+                        "desc: " + ret.description + "\n" +
+                        "ownerID: " + ret.ownerId + "\n" +
+                        "timestamp: " + ret.timestamp + "\n");
+                    document.getElementById("output").value = "file added successfully: " + ret.transactionId + "\n";
+                    console.log('ret: ', ret)
+
+                }
+            });
+        });
+
+        /*
+        Add File
+        */
+        /*$('#btnAddFile').click(function () {
+          var file = $('#addFile').val();
+          var comment = $('#addComment').val();
+          $.ajax({
+              type: 'POST',
+              url: URL + "addfile",
+              data: {
+                file: file,
+                description: comment
+              },
+              dataType: 'json',
+              success: function (ret) {
+                  document.getElementById("output").value = "add File: " + ret;
+              }
+          })
+        })*/
+
+      /*
+      Change layout after login and set attributes.
+      */
+      function onLogin() {
+          $('#loginBtn').val('logout');
+          State.isLogin = true;
+          $('#secretInput').hide();
+          $('#forms').show();
+          $('#logs').show();
+          $('#userInfo').show();
+
+          $('#userSecret').text('secret: ' + UserInfo.secret);
+          $('#userPublicKey').text('public-key: ' + UserInfo.publicKey);
+          $('#userAddress').text('address: ' + UserInfo.address);
+          $('#userBalance').text('balance: ' + UserInfo.balance);
+          $('#userCurrency').text('currency: ' + UserInfo.currency);
+          $('#userIsDelegate').text('isDelegate: ' + UserInfo.isDelegate);
+      }
+
+      /*
+      login-function
+      */
+      function login(secret) {
+          $.ajax({
+              type: 'POST',
+              url: URL + '/login',
+              data: {
+                  secret: secret
+              },
+              dataType: 'json',
+              success: function(ret) {
+                  console.log(ret);
+                  if (!ret.success) {
+                      alert(ret.error);
+                      return;
+                  }
+                  UserInfo.secret = secret;
+                  UserInfo.publicKey = ret.account.publicKey;
+                  UserInfo.address = ret.account.address;
+                  UserInfo.balance = ret.account.balances[0].balance;
+                  UserInfo.currency = ret.account.balances[0].currency;
+                  UserInfo.isDelegate = ret.account.isDelegate;
+                  onLogin(ret.account);
+              }
+          });
+      }
+
+      /*
+      Change layout after logout and set attributes.
+      */
+      function logout() {
+          $('#loginBtn').val('login');
+          State.isLogin = false;
+          $('#secretInput').show();
+          $('#forms').hide();
+          $('#logs').hide();
+      }
+
+      /*
+      Logic from login / logout button.
+      */
+      $('#loginBtn').click(function () {
+          if (State.isLogin) {
+              logout();
+          } else {
+              login($('#secretInput').val());
+          }
+      });
+
+      document.getElementById("urlTitle").innerHTML = URL;
 
 
       getSidechainBlockHeight();
@@ -176,9 +331,6 @@ document.getElementById("urlTitle").innerHTML = URL;
         var State = {
             isLogin: false,
             timer: null
-        };
-        var UserInfo = {
-            secret: '',
         };
         function updateBalanceView(balances) {
             var $table = $('#balanceTable');
@@ -267,6 +419,7 @@ document.getElementById("urlTitle").innerHTML = URL;
                 getBalances(UserInfo.address);
             }
         }, 10 * 1000);
+
         $('#loginBtn').click(function () {
             if (State.isLogin) {
                 logout();
@@ -274,6 +427,7 @@ document.getElementById("urlTitle").innerHTML = URL;
                 login($('#secretInput').val());
             }
         });
+
         $('#invokeBtn').click(function () {
             var args = $('#contractArgs').val().split('\n')
             var fee = '10000000'
@@ -326,64 +480,93 @@ document.getElementById("urlTitle").innerHTML = URL;
 </script>
 
 <body>
-    <h1>Asch dApp: notary</h1>
-    <p id="urlTitle"></p>
+    <div class="container">
 
-    <!--
-    <div>
-        <input type="password" id="secretInput" placeholder="Please input master secret">
-        <input type="button" value="Login" id="loginBtn">
-    </div>
-    -->
+      <h1>Asch dApp: notary</h1>
+      <p id="urlTitle"></p>
+      <p><a href="http://localhost:4096/api/chains/test-nDtTqaHrptvq/allfiles" target="_blank">Alle gespeicherten Dateien.</a>
+      </p>
 
+      <div class="row">
+        <div class="col">
+          <div>
+              <input type="password" id="secretInput" placeholder="Please input master secret">
+              <input type="button" value="Login" id="loginBtn">
+          </div>
+        </div>
+      </div>
 
+      <div id="userInfo">
+        <p id="userSecret"></p>
+        <p id="userPublicKey"></p>
+        <p id="userAddress"></p>
+        <p id="userBalance"></p>
+        <p id="userCurrency"></p>
+        <p id="userIsDelegate"></p>
+      </div>
 
-    <div class="">
-      <input type="text" id="searchUser" placeholder="enter user-id">
-      <input type="button" id="btnSearchUser" value="search">
-    </div>
+      <div class="row">
+        <div class="col">
 
-    <div class="">
-      <input type="text" id="searchFile" placeholder="enter filehash">
-      <input type="button" id="btnSearchFile" value="search">
-    </div>
+          <div id="forms">
+            <div class="">
+              <input type="text" id="searchUser" placeholder="enter user-id">
+              <input type="button" id="btnSearchUser" value="search">
+            </div>
 
-    <div class="">
-      <input type="text" id="addFile" placeholder="enter filehash">
-      <input type="text" id="addComment" placeholder="enter comment">
-      <input type="button" id="btnAddFile" value="Add">
-    </div>
+            <div class="">
+              <input type="text" id="searchFile" placeholder="enter filehash">
+              <input type="button" id="btnSearchFile" value="search">
+            </div>
 
-    <div class="">
-      <label for="output">Log:</label>
-      <textarea rows="4" cols="50" name="output" id="output"></textarea>
-    </div>
-<hr>
-    <div class="" id="notary-blocks-height">
+            <div class="">
+              <input type="text" id="addFile" placeholder="enter filehash">
+              <input type="text" id="addComment" placeholder="enter comment">
+              <input type="button" id="btnAddFile" value="Add">
+            </div>
+          </div>
 
-    </div>
+        </div>
+        <div class="col">
+          <div id="logs">
+            <label for="output">Log:</label>
+            <textarea rows="10" cols="50" name="output" id="output"></textarea>
+          </div>
 
-    <div class="" id="notary-transactions-count">
+        </div>
+      </div>
 
-    </div>
+      <div class="row">
+        <div class="col">
+          <div class="" id="notary-blocks-height"></div>
+        </div>
+        <div class="col">
+          <div class="" id="notary-transactions-count"></div>
+        </div>
+        <div class="col">
+          <div class="" id="notary-time-last-update"></div>
+        </div>
+      </div>
 
-    <div class="" id="notary-time-last-update">
+      <div class="row">
+        <div class="col">
 
-    </div>
+          <h2>notary-last-five-blocks</h2>
+          <ul id="notary-last-five-blocks">
+            <li>empty</li>
+          </ul>
 
-    <div class="">
-      <h2>notary-last-five-blocks</h2>
-      <ul id="notary-last-five-blocks">
-        <li>empty</li>
-      </ul>
-    </div>
+        </div>
+        <div class="col">
 
-    <div class="">
-      <h2>notary-last-five-transactions</h2>
-      <ul id="notary-last-five-transactions">
-        <li>empty</li>
-      </ul>
-    </div>
+          <h2>notary-last-five-transactions</h2>
+          <ul id="notary-last-five-transactions">
+            <li>empty</li>
+          </ul>
+
+        </div>
+      </div>
+      </div>
 
     <div id="mainPanel" style="display: none;">
       <!--

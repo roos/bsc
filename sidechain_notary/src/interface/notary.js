@@ -1,5 +1,5 @@
 //getestet = ok
-app.route.get('/file', async function(req) {
+app.route.get('/allfiles', async function(req) {
   // load all
   let files = await app.model.Notary.findAll({
     limit: 50,
@@ -17,7 +17,7 @@ ergibt einen Fehler, dass t.rimestamp nicht existiert...
 immer nur der erste eintrag zurueck gegebene.*/
 app.route.get('/file/:file', async function(req) {
   return await app.model.Notary.findOne({
-    file: req.params.file
+    condition: { file: req.params.file }
   })
 })
 
@@ -27,21 +27,23 @@ app.route.get('/user/:user', async function(req) {
   //return await app.model.Notary.findOne({file: req.params.file})
   //return "user vielleicht gefunden.";
 
-  return await app.model.Notary.findOne({
-    ownerId: req.params.user
+  return await app.model.Notary.findAll({
+    condition: { ownerId: req.params.user }
   })
 })
 
-app.route('/file/:file/:comment', async function(req) {
+/*app.route('/addFile/:file', async function(req) {
   .post(function(req, res) {
     res.send("der post bereich.");
   });
+})*/
+
+app.route.get('/addfile/:a/:b', async (req) => {
+  let result = { file: 'file123', comment: 'comment123', a: 'a: ' + req.params.a, b: 'b: ' + req.params.b }
+  return result
 })
 
-/*
-
-
-app.route.get('/file',  async function (req) {
-    return await app.model.Notary.findOne({file: req.params.file})
+app.route.get('/anmelden', async (req) => {
+  let result = { benutzer: 'benutzer' }
+  return result
 })
-*/
