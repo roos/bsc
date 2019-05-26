@@ -1,5 +1,5 @@
 module.exports = {
-  name: 'notaries',
+  name: 'notarys',
   fields: [
      {
       name: 'id',

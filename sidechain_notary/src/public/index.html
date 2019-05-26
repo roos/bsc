@@ -83,7 +83,7 @@
               url: URL + "blocks/height",
               dataType: 'json',
               success: function (ret) {
-                  console.log("return block height: " + ret);
+                  // console.log("return block height: " + ret);
                   block_height = ret.height;
                   var blocksHeight = document.getElementById("notary-blocks-height");
                   blocksHeight.innerHTML = "Blockhöhe der Sidechain 'notary': " + ret.height;
@@ -100,7 +100,7 @@
               url: URL + "transactions",
               dataType: 'json',
               success: function (ret) {
-                  console.log("return transactions count: " + ret.count);
+                  // console.log("return transactions count: " + ret.count);
                   transaction_count = ret.count;
                   var transactions = document.getElementById("notary-transactions-count");
                   transactions.innerHTML = "Anzahl Transactions der Sidechain 'notary': " + ret.count;
@@ -138,14 +138,17 @@
 
                   for(var i = ret.blocks.length-1; i>=0; i--) {
                     var node = document.createElement("LI");
-                    var id = document.createTextNode("ID: " + ret.blocks[i].id);
-                    var hoehe = document.createTextNode("height: " + ret.blocks[i].height);
-                    var timestamp = document.createTextNode("Timestamp: " + ret.blocks[i].timestamp);
-                    var delegate = document.createTextNode("Delegate: " + ret.blocks[i].delegate);
-                    node.appendChild(id);
+
+                    var hoehe = document.createTextNode("Height: " + ret.blocks[i].height);
+                    var id = document.createTextNode(" | ID: " + ret.blocks[i].id.substring(0, 5) + '...');
+                    var timestamp = document.createTextNode(" | Timestamp: " + ret.blocks[i].timestamp);
+                    var delegate = document.createTextNode(" | Delegate: " + ret.blocks[i].delegate.substring(0, 5) + '...');
+
                     node.appendChild(hoehe);
+                    node.appendChild(id);
                     node.appendChild(timestamp);
                     node.appendChild(delegate);
+
                     document.getElementById("notary-last-five-blocks").appendChild(node);
                   }
               }
@@ -165,12 +168,19 @@
               url: URL + "transactions" + ((transaction_count < 4) ? "" : ("?offset=" + (transaction_count - 4))),
               dataType: 'json',
               success: function (res) {
-                  //console.log("return last 5 transactions: " + res);
+                  console.log("return last 5 transactions: " + res);
 
                   for(var i = transaction_count-1; i>=0; i--) {
                     var node = document.createElement("LI");
-                    var textnode = document.createTextNode("transaction-id: " + res.transactions[i].id);
-                    node.appendChild(textnode);
+
+                    var id = document.createTextNode("ID: " + res.transactions[i].id.substring(0, 5) + '...');
+                    var senderId = document.createTextNode(" | senderId: " + res.transactions[i].senderId.substring(0, 5) + '...');
+                    var timestamp = document.createTextNode(" | Timestamp: " + res.transactions[i].timestamp);
+
+                    node.appendChild(id);
+                    node.appendChild(senderId);
+                    node.appendChild(timestamp);
+
                     document.getElementById("notary-last-five-transactions").appendChild(node);
                   }
               }
@@ -181,14 +191,24 @@
       Add file to DB with transaction.
       */
       $('#btnAddFile').click(function () {
-            var filehash = $('#addFile').val();
-            var comment = $('#addComment').val();
-            var fee = '10000000'
+            var file = $('#addFile').val();
+            var description = $('#addComment').val();
+
+            $.ajax({
+                type: 'GET',
+                url: URL + "/addfile/" + file + "/" + description + "/" + UserInfo.secret,
+                dataType: 'json',
+                success: function (ret) {
+                    document.getElementById("output").value = "addFile: " + JSON.stringify(ret) + "\n";
+                }
+            })
+
+            /*var fee = '10000000'
             var data = {
                 secret: UserInfo.secret,
                 fee: fee,
                 type: 1000,
-                args: JSON.stringify([filehash, comment])
+                args: JSON.stringify([file, description])
             }
             console.log('invoke: ', data)
             $.ajax({
@@ -203,18 +223,12 @@
                         document.getElementById("output").value = "file could not be added: " + ret.error + "\n";
                         return;
                     }
-                    alert("Success! ret: " + ret + "\n" +
-                        "transID: " + ret.transactionId + "\n" +
-                        "id: " + ret.id + "\n" +
-                        "file: " + ret.file + "\n" +
-                        "desc: " + ret.description + "\n" +
-                        "ownerID: " + ret.ownerId + "\n" +
-                        "timestamp: " + ret.timestamp + "\n");
+                    alert("Success! " + ret.transactionId + "\n");
                     document.getElementById("output").value = "file added successfully: " + ret.transactionId + "\n";
                     console.log('ret: ', ret)
 
                 }
-            });
+            });*/
         });
 
         /*
@@ -555,8 +569,8 @@
           <ul id="notary-last-five-blocks">
             <li>empty</li>
           </ul>
-
         </div>
+
         <div class="col">
 
           <h2>notary-last-five-transactions</h2>

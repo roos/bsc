@@ -1,3 +1,6 @@
+const AschJS = require('asch-js')
+const axios = require('axios')
+
 //getestet = ok
 app.route.get('/allfiles', async function(req) {
   // load all
@@ -38,9 +41,40 @@ app.route.get('/user/:user', async function(req) {
   });
 })*/
 
-app.route.get('/addfile/:a/:b', async (req) => {
-  let result = { file: 'file123', comment: 'comment123', a: 'a: ' + req.params.a, b: 'b: ' + req.params.b }
-  return result
+app.route.get('/addfile/:file/:comment/:secret', async (req) => {
+  /*let result = { file: 'file123', comment: 'comment123', a: 'a: ' + req.params.a, b: 'b: ' + req.params.b }
+  return result*/
+
+  let fee = String(0.1 * 1e8)
+  let type = 1000 /* custom contract type */
+  let options = {
+    fee: fee,
+    type: type,
+    args: JSON.stringify([req.params.file, req.params.comment])
+  }
+  let secret = req.params.secret
+  let transaction = AschJS.dapp.createInnerTransaction(options, secret)
+
+
+  let dappName = 'test-nDtTqaHrptvq'
+  let url = `http://localhost:4096/api/chains/${dappName}/transactions/signed`
+  let data = {
+    transaction: transaction
+  }
+  let headers = {
+    magic: '594fe0f3',
+    version: ''
+  }
+
+  axios.put(url, data, headers)
+    .then((response) => {
+      console.log(JSON.stringify(response.data))
+      return JSON.stringify('return: ' + response.data)
+    })
+    .catch((error) => {
+      console.log(error.message)
+      return error.message
+    })
 })
 
 app.route.get('/anmelden', async (req) => {
