@@ -2,620 +2,393 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <script src="http://lib.sinaapp.com/js/jquery/1.9.1/jquery-1.9.1.min.js"></script>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <title>Asch dApp: notary</title>
+  <meta charset="UTF-8">
+  <script src="http://lib.sinaapp.com/js/jquery/1.9.1/jquery-1.9.1.min.js"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <title>Asch Dapp: notary</title>
 </head>
 
 <script type="text/javascript">
+  $(document).ready(function() {
 
-    $(document).ready(function() {
+    /*
+    Vorlage > QUELLE: https://github.com/bassjobsen/hello-blockchain-dapp/blob/master/public/index.html
+    */
 
-      /*
-      Vorlage > QUELLE: https://github.com/bassjobsen/hello-blockchain-dapp/blob/master/public/index.html
-      */
+    var DAPP_ID = "/chains/test-nDtTqaHrptvq/";
+    var URL = "http://localhost:4096/api" + DAPP_ID;
+    var block_height = 0;
+    var transaction_count = 0;
+    var State = {
+      isLogin: false
+    };
+    var UserInfo = {
+      secret: '',
+      publicKey: '',
+      address: '',
+      balance: '',
+      currency: '',
+      isDelegate: false
+    };
+    $('#forms').hide();
+    $('#logs').hide();
 
-      var DAPP_ID = "/chains/test-nDtTqaHrptvq/";
-      var URL = "http://localhost:4096/api" + DAPP_ID;
-      var block_height = 0;
-      var transaction_count = 0;
-      var State = {
-          isLogin: false
-      };
-      var UserInfo = {
-          secret: '',
-          publicKey: '',
-          address: '',
-          balance: '',
-          currency: '',
-          isDelegate: false
-      };
-      $('#forms').hide();
-      $('#logs').hide();
+    /*
+    Search User
+    */
+    $('#btnSearchUser').click(function() {
+      var args = $('#searchUser').val();
+      $.ajax({
+        type: 'GET',
+        //url: URL + "/accounts/" + args,
+        url: URL + "/user/" + args,
+        dataType: 'json',
+        success: function(ret) {
+          document.getElementById("output").value = "search User: " + JSON.stringify(ret) + "\n";
+        }
+      })
 
-      /*
-      Search User
-      */
-      $('#btnSearchUser').click(function () {
-        var args = $('#searchUser').val();
-        $.ajax({
-            type: 'GET',
-            //url: URL + "/accounts/" + args,
-            url: URL + "/user/" + args,
-            dataType: 'json',
-            success: function (ret) {
-                document.getElementById("output").value = "search User: " + JSON.stringify(ret) + "\n";
-            }
-        })
+      document.getElementById("searchUser").value = "";
+    });
 
+    /*
+    Search File
+    */
+    $('#btnSearchFile').click(function() {
+      var args = $('#searchFile').val();
 
-        document.getElementById("searchUser").value = "";
-        //alert("search User: " + args);
-        //document.getElementById("output").value = "search User: " + args;
-      });
+      $.ajax({
+        type: 'GET',
+        url: URL + "/file/" + args,
+        dataType: 'json',
+        success: function(ret) {
+          document.getElementById("output").value = "search File: " + JSON.stringify(ret) + "\n";
+        }
+      })
 
-      /*
-      Search File
-      */
-      $('#btnSearchFile').click(function () {
-        var args = $('#searchFile').val();
+      document.getElementById("searchFile").value = "";
+    });
 
-        $.ajax({
-            type: 'GET',
-            url: URL + "/file/" + args,
-            dataType: 'json',
-            success: function (ret) {
-                document.getElementById("output").value = "search File: " + JSON.stringify(ret) + "\n";
-            }
-        })
+    /*
+    Get Sidechain Block-Height
+    */
+    function getSidechainBlockHeight() {
+      $.ajax({
+        type: 'GET',
+        url: URL + "blocks/height",
+        dataType: 'json',
+        success: function(ret) {
+          block_height = ret.height;
+          var blocksHeight = document.getElementById("notary-blocks-height");
+          blocksHeight.innerHTML = "Blockhöhe der Sidechain 'notary': " + ret.height;
+        }
+      })
+    }
 
-        document.getElementById("searchFile").value = "";
-        //document.getElementById("output").value = "search File: " + args;
-      });
+    /*
+    Get Sidechain Transaction Count
+    */
+    function getSidechainTransactionCount() {
+      $.ajax({
+        type: 'GET',
+        url: URL + "transactions",
+        dataType: 'json',
+        success: function(ret) {
+          transaction_count = ret.count;
+          var transactions = document.getElementById("notary-transactions-count");
+          transactions.innerHTML = "Anzahl Transactions der Sidechain 'notary': " + ret.count;
+        }
+      })
+    }
 
-      /*
-      Get Sidechain Block-Height
-      */
-      function getSidechainBlockHeight() {
-          $.ajax({
-              type: 'GET',
-              url: URL + "blocks/height",
-              dataType: 'json',
-              success: function (ret) {
-                  // console.log("return block height: " + ret);
-                  block_height = ret.height;
-                  var blocksHeight = document.getElementById("notary-blocks-height");
-                  blocksHeight.innerHTML = "Blockhöhe der Sidechain 'notary': " + ret.height;
-              }
-          })
-      }
+    /*
+    Get time from last update
+    */
+    function setLastUpdate() {
+      a = new Date();
+      b = a.getHours();
+      c = a.getMinutes();
+      d = a.getSeconds();
+      zeit = b + ':' + c + ':' + d;
+      var lastUpdate = document.getElementById("notary-time-last-update");
+      lastUpdate.innerHTML = "Last Update: " + zeit;
+    }
 
-      /*
-      Get Sidechain Transaction Count
-      */
-      function getSidechainTransactionCount() {
-          $.ajax({
-              type: 'GET',
-              url: URL + "transactions",
-              dataType: 'json',
-              success: function (ret) {
-                  // console.log("return transactions count: " + ret.count);
-                  transaction_count = ret.count;
-                  var transactions = document.getElementById("notary-transactions-count");
-                  transactions.innerHTML = "Anzahl Transactions der Sidechain 'notary': " + ret.count;
-              }
-          })
-      }
+    /*
+    Get last five blocks (from sidechain)
+    */
+    function getSidechainLastFiveBlocks() {
+      var blocksLastFive = document.getElementById("notary-last-five-blocks");
 
-      /*
-      Get time from last update
-      */
-      function setLastUpdate() {
-        a = new Date();
-        b = a.getHours();
-        c = a.getMinutes();
-        d = a.getSeconds();
-        zeit = b+':'+c+':'+d;
-        var lastUpdate = document.getElementById("notary-time-last-update");
-        lastUpdate.innerHTML = "Last Update: " + zeit;
-      }
+      blocksLastFive.innerHTML = "";
 
-      /*
-      Get last five blocks (from sidechain)
-      */
-      function getSidechainLastFiveBlocks() {
-          var blocksLastFive = document.getElementById("notary-last-five-blocks");
+      $.ajax({
+        type: 'GET',
+        url: URL + "blocks?offset=" + (block_height - 5),
+        dataType: 'json',
+        success: function(ret) {
+          console.log("return last five blocks: " + ret);
 
-          blocksLastFive.innerHTML = "";
+          var tabelle = "<table class='table table-striped'>";
+          tabelle += "<tr><th>Height</th><th>ID</th><th>Timestamp</th><th>Delegate</th></tr>";
 
-          $.ajax({
-              type: 'GET',
-              url: URL + "blocks?offset=" + (block_height - 4),
-              dataType: 'json',
-              success: function (ret) {
-                  console.log("return last five blocks: " + ret);
+          for (var i = 4; i >= 0; i--) {
 
-                  for(var i = ret.blocks.length-1; i>=0; i--) {
-                    var node = document.createElement("LI");
+            tabelle += "<tr><td>" + ret.blocks[i].height + "</td><td>" + ret.blocks[i].id.substring(0, 10) + '...' + "</td><td>" + ret.blocks[i].timestamp + "</td><td>" + ret.blocks[i].delegate.substring(0, 10) + '...' + "</td></tr>";
 
-                    var hoehe = document.createTextNode("Height: " + ret.blocks[i].height);
-                    var id = document.createTextNode(" | ID: " + ret.blocks[i].id.substring(0, 5) + '...');
-                    var timestamp = document.createTextNode(" | Timestamp: " + ret.blocks[i].timestamp);
-                    var delegate = document.createTextNode(" | Delegate: " + ret.blocks[i].delegate.substring(0, 5) + '...');
-
-                    node.appendChild(hoehe);
-                    node.appendChild(id);
-                    node.appendChild(timestamp);
-                    node.appendChild(delegate);
-
-                    document.getElementById("notary-last-five-blocks").appendChild(node);
-                  }
-              }
-          })
-      }
-
-      /*
-      Get last five transactions (from sidechain)
-      */
-      function getSidechainLastFiveTransactions() {
-          var blocksLastFive = document.getElementById("notary-last-five-transactions");
-
-          blocksLastFive.innerHTML = "";
-
-          $.ajax({
-              type: 'GET',
-              url: URL + "transactions" + ((transaction_count < 4) ? "" : ("?offset=" + (transaction_count - 4))),
-              dataType: 'json',
-              success: function (res) {
-                  console.log("return last 5 transactions: " + res);
-
-                  for(var i = transaction_count-1; i>=0; i--) {
-                    var node = document.createElement("LI");
-
-                    var id = document.createTextNode("ID: " + res.transactions[i].id.substring(0, 5) + '...');
-                    var senderId = document.createTextNode(" | senderId: " + res.transactions[i].senderId.substring(0, 5) + '...');
-                    var timestamp = document.createTextNode(" | Timestamp: " + res.transactions[i].timestamp);
-
-                    node.appendChild(id);
-                    node.appendChild(senderId);
-                    node.appendChild(timestamp);
-
-                    document.getElementById("notary-last-five-transactions").appendChild(node);
-                  }
-              }
-          })
-      }
-
-      /*
-      Add file to DB with transaction.
-      */
-      $('#btnAddFile').click(function () {
-            var file = $('#addFile').val();
-            var description = $('#addComment').val();
-
-            $.ajax({
-                type: 'GET',
-                url: URL + "/addfile/" + file + "/" + description + "/" + UserInfo.secret,
-                dataType: 'json',
-                success: function (ret) {
-                    document.getElementById("output").value = "addFile: " + JSON.stringify(ret) + "\n";
-                }
-            })
-
-            /*var fee = '10000000'
-            var data = {
-                secret: UserInfo.secret,
-                fee: fee,
-                type: 1000,
-                args: JSON.stringify([file, description])
-            }
-            console.log('invoke: ', data)
-            $.ajax({
-                type: 'PUT',
-                url: URL + '/transactions/unsigned',
-                data: data,
-                dataType: 'json',
-                success: function(ret) {
-                    console.log('addFile success area: ' + ret);
-                    if (!ret.success) {
-                        alert('Error: ' + ret.error);
-                        document.getElementById("output").value = "file could not be added: " + ret.error + "\n";
-                        return;
-                    }
-                    alert("Success! " + ret.transactionId + "\n");
-                    document.getElementById("output").value = "file added successfully: " + ret.transactionId + "\n";
-                    console.log('ret: ', ret)
-
-                }
-            });*/
-        });
-
-        /*
-        Add File
-        */
-        /*$('#btnAddFile').click(function () {
-          var file = $('#addFile').val();
-          var comment = $('#addComment').val();
-          $.ajax({
-              type: 'POST',
-              url: URL + "addfile",
-              data: {
-                file: file,
-                description: comment
-              },
-              dataType: 'json',
-              success: function (ret) {
-                  document.getElementById("output").value = "add File: " + ret;
-              }
-          })
-        })*/
-
-      /*
-      Change layout after login and set attributes.
-      */
-      function onLogin() {
-          $('#loginBtn').val('logout');
-          State.isLogin = true;
-          $('#secretInput').hide();
-          $('#forms').show();
-          $('#logs').show();
-          $('#userInfo').show();
-
-          $('#userSecret').text('secret: ' + UserInfo.secret);
-          $('#userPublicKey').text('public-key: ' + UserInfo.publicKey);
-          $('#userAddress').text('address: ' + UserInfo.address);
-          $('#userBalance').text('balance: ' + UserInfo.balance);
-          $('#userCurrency').text('currency: ' + UserInfo.currency);
-          $('#userIsDelegate').text('isDelegate: ' + UserInfo.isDelegate);
-      }
-
-      /*
-      login-function
-      */
-      function login(secret) {
-          $.ajax({
-              type: 'POST',
-              url: URL + '/login',
-              data: {
-                  secret: secret
-              },
-              dataType: 'json',
-              success: function(ret) {
-                  console.log(ret);
-                  if (!ret.success) {
-                      alert(ret.error);
-                      return;
-                  }
-                  UserInfo.secret = secret;
-                  UserInfo.publicKey = ret.account.publicKey;
-                  UserInfo.address = ret.account.address;
-                  UserInfo.balance = ret.account.balances[0].balance;
-                  UserInfo.currency = ret.account.balances[0].currency;
-                  UserInfo.isDelegate = ret.account.isDelegate;
-                  onLogin(ret.account);
-              }
-          });
-      }
-
-      /*
-      Change layout after logout and set attributes.
-      */
-      function logout() {
-          $('#loginBtn').val('login');
-          State.isLogin = false;
-          $('#secretInput').show();
-          $('#forms').hide();
-          $('#logs').hide();
-      }
-
-      /*
-      Logic from login / logout button.
-      */
-      $('#loginBtn').click(function () {
-          if (State.isLogin) {
-              logout();
-          } else {
-              login($('#secretInput').val());
           }
-      });
 
-      document.getElementById("urlTitle").innerHTML = URL;
+          tabelle += "</table>";
 
+          document.getElementById("notary-last-five-blocks").innerHTML = tabelle;
 
-      getSidechainBlockHeight();
-      getSidechainTransactionCount();
+        }
+      })
+    }
 
-      setInterval(function() {
-        getSidechainBlockHeight();
-        getSidechainLastFiveBlocks();
-        getSidechainTransactionCount();
-        getSidechainLastFiveTransactions();
-        setLastUpdate();
-      }, 10 * 1000);
+    /*
+    Get last five transactions (from sidechain)
+    */
+    function getSidechainLastFiveTransactions() {
+      var blocksLastFive = document.getElementById("notary-last-five-transactions");
+
+      blocksLastFive.innerHTML = "";
+
+      $.ajax({
+        type: 'GET',
+        url: URL + "transactions" + ((transaction_count < 4) ? "" : ("?offset=" + (transaction_count - 5))),
+        dataType: 'json',
+        success: function(res) {
+          //console.log("return last 5 transactions: " + res.transactions);
+
+          var tabelle = "<table class='table table-striped'>";
+          tabelle += "<tr><th>ID</th><th>Sender-id</th><th>Timestamp</th></tr>";
+
+          for (var i = 4; i >= 0; i--) {
+
+            tabelle += "<tr><td>" + res.transactions[i].id.substring(0, 10) + '...' + "</td><td>" + res.transactions[i].senderId.substring(0, 10) + '...' + "</td><td>" + res.transactions[i].timestamp + "</td></tr>";
+
+          }
+
+          tabelle += "</table>";
+
+          document.getElementById("notary-last-five-transactions").innerHTML = tabelle;
+
+        }
+      })
+    }
+
+    /*
+    Add file to DB with transaction.
+    */
+    $('#btnAddFile').click(function() {
+      var file = $('#addFile').val();
+      file = file.replace(/^.*[\\\/]/, '');
+      var description = $('#addComment').val();
+
+      $.ajax({
+        type: 'GET',
+        url: URL + "/addfile/" + file + "/" + description + "/" + UserInfo.secret,
+        dataType: 'json',
+        success: function(ret) {
+          document.getElementById("output").value = "addFile: " + JSON.stringify(ret) + "\n";
+        }
+      })
 
     });
 
+    /*
+    Change layout after login and set attributes.
+    */
+    function onLogin() {
+      $('#loginBtn').val('logout');
+      State.isLogin = true;
+      $('#secretInput').hide();
+      $('#forms').show();
+      $('#logs').show();
+      $('#userInfo').show();
+
+      $('#userSecret').text('secret: ' + UserInfo.secret);
+      $('#userPublicKey').text('public-key: ' + UserInfo.publicKey);
+      $('#userAddress').text('address: ' + UserInfo.address);
+      $('#userBalance').text('balance: ' + UserInfo.balance);
+      $('#userCurrency').text('currency: ' + UserInfo.currency);
+      $('#userIsDelegate').text('isDelegate: ' + UserInfo.isDelegate);
 
 
-    /*$(document).ready(function() {
-        var DAPP_ID = window.location.pathname.split('/')[2];
-        var BASE_URL = '/api/dapps/' + DAPP_ID;
-        var COUNT_PER_PAGE = 20;
-        var State = {
-            isLogin: false,
-            timer: null
-        };
-        function updateBalanceView(balances) {
-            var $table = $('#balanceTable');
-            $table.find('tr:not(:first)').remove();
-            for (var i in balances) {
-                var balanceInfo = balances[i]
-                var balance = Number(balanceInfo.balance) / 100000000
-                var currency = balanceInfo.currency
-                var tr = '<tr><td>' + currency + '</td>' + '<td>' + balance + '</td></tr>';
-                $table.append(tr);
-            }
-        }
-        function loadContracts() {
-            $.ajax({
-                type: 'GET',
-                url: BASE_URL + '/contracts',
-                dataType: 'json',
-                success: function (ret) {
-                    console.log(ret)
-                    var $contractOptions = $('#contractOptions')
-                    $contractOptions.empty()
-                    for (var i in ret.contracts) {
-                        var c = ret.contracts[i]
-                        $contractOptions.append('<option value="' + c.type + '">' + c.type + ': ' + c.name + '</option>')
-                    }
-                }
-            })
-        }
-        function onLogin(account) {
-            State.isLogin = true;
-            $('#loginBtn').val('Logout');
-            $('#secretInput').hide();
-            $('#mainPanel').show();
-            updateBalanceView(account.balances);
-            loadContracts()
-        }
-        function login(secret) {
-            $.ajax({
-                type: 'POST',
-                url: BASE_URL + '/login',
-                data: {
-                    secret: secret
-                },
-                dataType: 'json',
-                success: function(ret) {
-                    console.log(ret);
-                    if (!ret.success) {
-                        alert(ret.error);
-                        return;
-                    }
-                    UserInfo.secret = secret;
-                    UserInfo.publicKey = ret.account.publicKey;
-                    UserInfo.address = ret.account.address
-                    onLogin(ret.account);
-                }
-            });
-        }
-        function getBalances(address) {
-            $.ajax({
-                type: 'GET',
-                url: BASE_URL + '/balances/' + address,
-                dataType: 'json',
-                success: function(ret) {
-                    console.log(ret);
-                    if (!ret.success) {
-                        alert(ret.error);
-                        return;
-                    }
-                    updateBalanceView(ret.balances)
-                }
-            });
-        }
-        function logout() {
-            $('#loginBtn').val('login');
-            $('#secretInput').show();
-            $('#mainPanel').hide();
-            State.isLogin = false;
-            if (State.timer) {
-                clearInterval(State.timer);
-                State.timer = null;
-            }
-        }
+      document.getElementById("userInfo").innerHTML = '<table class="table table-sm"><tr><th scope="row">secret</th><td>' + UserInfo.secret + '</td></tr><tr><th scope="row">public-key</th><td>' + UserInfo.publicKey +
+        '</td></tr><tr><th scope="row">address</th><td>' + UserInfo.address + '</td></tr><tr><th scope="row">balance</th><td>' + UserInfo.balance + '</td></tr><tr><th scope="row">currency</th><td>' + UserInfo.currency +
+        '</td></tr><tr><th scope="row">isDelegate</th><td>' + UserInfo.isDelegate + '</td></tr></table>';
 
-        State.timer = setInterval(function () {
-            if (UserInfo.publicKey) {
-                getBalances(UserInfo.address);
-            }
-        }, 10 * 1000);
+    }
 
-        $('#loginBtn').click(function () {
-            if (State.isLogin) {
-                logout();
-            } else {
-                login($('#secretInput').val());
-            }
-        });
+    /*
+    login-function
+    */
+    function login(secret) {
+      $.ajax({
+        type: 'POST',
+        url: URL + '/login',
+        data: {
+          secret: secret
+        },
+        dataType: 'json',
+        success: function(ret) {
+          console.log(ret);
+          if (!ret.success) {
+            alert(ret.error);
+            return;
+          }
+          UserInfo.secret = secret;
+          UserInfo.publicKey = ret.account.publicKey;
+          UserInfo.address = ret.account.address;
+          UserInfo.balance = ret.account.balances[0].balance;
+          UserInfo.currency = ret.account.balances[0].currency;
+          UserInfo.isDelegate = ret.account.isDelegate;
+          onLogin(ret.account);
+        }
+      });
+    }
 
-        $('#invokeBtn').click(function () {
-            var args = $('#contractArgs').val().split('\n')
-            var fee = '10000000'
-            var data = {
-                secret: UserInfo.secret,
-                fee: fee,
-                type: Number($('#contractOptions').val()),
-                args: JSON.stringify(args)
-            }
-            console.log('invoke', data)
-            $.ajax({
-                type: 'PUT',
-                url: BASE_URL + '/transactions/unsigned',
-                data: data,
-                dataType: 'json',
-                success: function(ret) {
-                    console.log(ret);
-                    if (!ret.success) {
-                        alert('Error: ' + ret.error);
-                        return;
-                    }
-                    alert("Success! " + ret.transactionId);
-                }
-            });
-        })
-        $('#accessBtn').click(function () {
-            var params = $('#accessParams').val()
-            var jsonParams = null
-            try {
-                if (params) {
-                    var jsonParams = JSON.parse(params)
-                }
-            } catch (e) {
-                alert('Invalid params')
-                return
-            }
+    /*
+    Change layout after logout and set attributes.
+    */
+    function logout() {
+      $('#loginBtn').val('login');
+      State.isLogin = false;
+      $('#secretInput').show();
+      $('#forms').hide();
+      $('#logs').hide();
+    }
 
-            $.ajax({
-                type: 'GET',
-                url: BASE_URL + $('#accessUrl').val(),
-                data: jsonParams,
-                dataType: 'json',
-                success: function (ret) {
-                    console.log(ret)
-                    $('#accessResponse').val(JSON.stringify(ret, null, 4));
-                }
-            })
-        })
-    });*/
+    /*
+    Logic from login / logout button.
+    */
+    $('#loginBtn').click(function() {
+      if (State.isLogin) {
+        logout();
+      } else {
+        login($('#secretInput').val());
+      }
+    });
+
+    document.getElementById("urlTitle").innerHTML = URL;
+
+    getSidechainBlockHeight();
+    getSidechainTransactionCount();
+
+    setInterval(function() {
+      getSidechainBlockHeight();
+      getSidechainLastFiveBlocks();
+      getSidechainTransactionCount();
+      getSidechainLastFiveTransactions();
+      setLastUpdate();
+    }, 10 * 1000);
+
+  });
 </script>
 
 <body>
-    <div class="container">
+  <div class="container">
 
-      <h1>Asch dApp: notary</h1>
-      <p id="urlTitle"></p>
-      <p><a href="http://localhost:4096/api/chains/test-nDtTqaHrptvq/allfiles" target="_blank">Alle gespeicherten Dateien.</a>
-      </p>
-
-      <div class="row">
-        <div class="col">
-          <div>
-              <input type="password" id="secretInput" placeholder="Please input master secret">
-              <input type="button" value="Login" id="loginBtn">
-          </div>
-        </div>
+    <div class="row">
+      <div class="col">
+        <h1>Asch Dapp: notary</h1>
+        <p id="urlTitle"></p>
+        <p><a href="http://localhost:4096/api/chains/test-nDtTqaHrptvq/allfiles" target="_blank">Alle gespeicherten Dateien.</a>
+        </p>
       </div>
-
-      <div id="userInfo">
-        <p id="userSecret"></p>
-        <p id="userPublicKey"></p>
-        <p id="userAddress"></p>
-        <p id="userBalance"></p>
-        <p id="userCurrency"></p>
-        <p id="userIsDelegate"></p>
-      </div>
-
-      <div class="row">
-        <div class="col">
-
-          <div id="forms">
-            <div class="">
-              <input type="text" id="searchUser" placeholder="enter user-id">
-              <input type="button" id="btnSearchUser" value="search">
-            </div>
-
-            <div class="">
-              <input type="text" id="searchFile" placeholder="enter filehash">
-              <input type="button" id="btnSearchFile" value="search">
-            </div>
-
-            <div class="">
-              <input type="text" id="addFile" placeholder="enter filehash">
-              <input type="text" id="addComment" placeholder="enter comment">
-              <input type="button" id="btnAddFile" value="Add">
-            </div>
-          </div>
-
-        </div>
-        <div class="col">
-          <div id="logs">
-            <label for="output">Log:</label>
-            <textarea rows="10" cols="50" name="output" id="output"></textarea>
-          </div>
-
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col">
-          <div class="" id="notary-blocks-height"></div>
-        </div>
-        <div class="col">
-          <div class="" id="notary-transactions-count"></div>
-        </div>
-        <div class="col">
-          <div class="" id="notary-time-last-update"></div>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col">
-
-          <h2>notary-last-five-blocks</h2>
-          <ul id="notary-last-five-blocks">
-            <li>empty</li>
-          </ul>
-        </div>
-
-        <div class="col">
-
-          <h2>notary-last-five-transactions</h2>
-          <ul id="notary-last-five-transactions">
-            <li>empty</li>
-          </ul>
-
-        </div>
-      </div>
-      </div>
-
-    <div id="mainPanel" style="display: none;">
-      <!--
-        <hr/>
-        <h2>Account balances</h2>
-        <div>
-            <table id="balanceTable" width="200px" border="1">
-                <tr>
-                    <th>Currency</th>
-                    <th>Balance</th>
-                </tr>
-            </table>
-        </div>
-
-        <hr/>
-        <h2>Contract invoke</h2>
-        <div>
-            <select id="contractOptions"></select><input type="button" id="invokeBtn" value="Invoke"><br/>
-            <textarea rows="6" cols="60" id="contractArgs" placeholder="Please input the arguments"></textarea><br/>
-        </div>
-
-        <hr/>
-        -->
-        <!--
-        <h2>Interface access</h2>
-        <div>
-            <input type="text" id="accessUrl" placeholder="Please input url"><input type="button" id="accessBtn" value="Access"><br/>
-            <textarea rows="10" cols="60" id="accessParams" placeholder="Please input params"></textarea><br/>
-            <textarea rows="20" cols="60" id="accessResponse"></textarea><br/>
-        </div>
-        -->
     </div>
 
-  <!--<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>-->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <div class="row">
+      <div class="col">
+
+        <div>
+          <input type="password" id="secretInput" placeholder="Please input master secret">
+          <input type="button" value="Login" id="loginBtn">
+        </div>
+
+        <div id="forms">
+          <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item">
+              <a class="nav-link active" id="search-tab" data-toggle="tab" href="#search" role="tab" aria-controls="search" aria-selected="true">Search</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" id="addfile-tab" data-toggle="tab" href="#addfile" role="tab" aria-controls="addfile" aria-selected="false">Add file</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" id="user-tab" data-toggle="tab" href="#userinfo" role="tab" aria-controls="userinfo" aria-selected="false">Userinfo</a>
+            </li>
+          </ul>
+          <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="search" role="tabpanel" aria-labelledby="search-tab">
+              <div class="">
+                <input type="text" id="searchUser" placeholder="enter user-id">
+                <input type="button" id="btnSearchUser" value="search">
+              </div>
+
+              <div class="">
+                <input type="text" id="searchFile" placeholder="enter file">
+                <input type="button" id="btnSearchFile" value="search">
+              </div>
+            </div>
+            <div class="tab-pane fade" id="addfile" role="tabpanel" aria-labelledby="addfile-tab">
+              <div class="">
+
+
+                <input type="file" id="addFile" placeholder="enter file">
+                <textarea rows="5" cols="50" name="output" id="addComment"></textarea>
+
+                <input type="button" id="btnAddFile" value="Add">
+              </div>
+            </div>
+            <div class="tab-pane fade" id="userinfo" role="tabpanel" aria-labelledby="user-tab">
+              <div id="userInfo">
+                <p id="userSecret"></p>
+                <p id="userPublicKey"></p>
+                <p id="userAddress"></p>
+                <p id="userBalance"></p>
+                <p id="userCurrency"></p>
+                <p id="userIsDelegate"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="col">
+        <div id="logs">
+          <textarea rows="10" cols="50" name="output" id="output"></textarea>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <h1>Info</h1>
+        <div class="" id="notary-time-last-update"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <div class="" id="notary-blocks-height"></div>
+        <h4>last-five-blocks</h4>
+        <div id="notary-last-five-blocks"></div>
+      </div>
+
+      <div class="col">
+        <div class="" id="notary-transactions-count"></div>
+        <h4>last-five-transactions</h4>
+        <div id="notary-last-five-transactions"></div>
+      </div>
+
+    </div>
+
+  </div>
+
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 </body>
 

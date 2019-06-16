@@ -1,14 +1,16 @@
 const AschJS = require('asch-js')
 const axios = require('axios')
 
-//getestet = ok
+/*
+Gibt alle hinterlegten Dateien aus. (limitiert auf 50!)
+*/
 app.route.get('/allfiles', async function(req) {
   // load all
   let files = await app.model.Notary.findAll({
     limit: 50,
     offset: 0,
 /*
-ergibt einen Fehler, dass t.rimestamp nicht existiert...
+ergibt einen Fehler, dass timestamp nicht existiert...
     sort: {
       timestamp: -1
     }*/
@@ -16,37 +18,30 @@ ergibt einen Fehler, dass t.rimestamp nicht existiert...
   return files
 })
 
-/*getestet = ok | es wird alles durchsucht (file, benutzer ...) und
-immer nur der erste eintrag zurueck gegebene.*/
+/*
+Sucht eine bestimmte Datei und gibt diese mit den entsprechenden Informationen zurueck.
+*/
 app.route.get('/file/:file', async function(req) {
   return await app.model.Notary.findOne({
     condition: { file: req.params.file }
   })
 })
 
-/*getestet = ok | es wird alles durchsucht (file, benutzer ...) und
-immer nur der erste eintrag zurueck gegebene.*/
+/*
+Sucht einen bestimmten Benutzer und gibt diesen mit allen registrierten Dateien zurueck.
+*/
 app.route.get('/user/:user', async function(req) {
-  //return await app.model.Notary.findOne({file: req.params.file})
-  //return "user vielleicht gefunden.";
-
   return await app.model.Notary.findAll({
     condition: { ownerId: req.params.user }
   })
 })
 
-/*app.route('/addFile/:file', async function(req) {
-  .post(function(req, res) {
-    res.send("der post bereich.");
-  });
-})*/
-
+/*
+Fuegt eine neue Datei mit einem Kommentar der Sidechain hinzu.
+*/
 app.route.get('/addfile/:file/:comment/:secret', async (req) => {
-  /*let result = { file: 'file123', comment: 'comment123', a: 'a: ' + req.params.a, b: 'b: ' + req.params.b }
-  return result*/
-
   let fee = String(0.1 * 1e8)
-  let type = 1000 /* custom contract type */
+  let type = 1001 /* custom contract type */
   let options = {
     fee: fee,
     type: type,
@@ -54,7 +49,6 @@ app.route.get('/addfile/:file/:comment/:secret', async (req) => {
   }
   let secret = req.params.secret
   let transaction = AschJS.dapp.createInnerTransaction(options, secret)
-
 
   let dappName = 'test-nDtTqaHrptvq'
   let url = `http://localhost:4096/api/chains/${dappName}/transactions/signed`
@@ -68,16 +62,11 @@ app.route.get('/addfile/:file/:comment/:secret', async (req) => {
 
   axios.put(url, data, headers)
     .then((response) => {
-      console.log(JSON.stringify(response.data))
-      return JSON.stringify('return: ' + response.data)
+      console.log(JSON.stringify('return: ' + response.data))
+      return JSON.stringify(response.data)
     })
     .catch((error) => {
       console.log(error.message)
       return error.message
     })
-})
-
-app.route.get('/anmelden', async (req) => {
-  let result = { benutzer: 'benutzer' }
-  return result
 })

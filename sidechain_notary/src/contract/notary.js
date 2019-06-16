@@ -1,6 +1,6 @@
 module.exports = {
-  add_file: async function(file, description) {
-    app.sdb.lock('notary.add_file@' + file)
+  addfile: async function(file, description) {
+    app.sdb.lock('notary.addfile@' + file)
     let exists = await app.model.Notary.exists({file: file})
     if (exists) return 'File already registered'
     app.sdb.create('Notary', {

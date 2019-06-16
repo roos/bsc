@@ -1,5 +1,8 @@
 {
-        "peers": [{"ip":"127.0.0.1","port":4096}],
+        "peers": [
+                {"ip":"127.0.0.1","port":4096},
+                {"ip":"172.17.0.3","port":4098}
+        ],
         "secrets": [
           "flame bottom dragon rely endorse garage supply urge turtle team demand put",
           "thrive veteran child enforce puzzle buzz valley crew genuine basket start top",
